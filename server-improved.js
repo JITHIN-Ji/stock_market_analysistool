@@ -289,7 +289,7 @@ class ImprovedStockScraper {
         summary.push(`📊 ${data.company_name || this.stockSymbol}`);
         
         // Current Price
-        if (data.current_price) {
+        if (data.current_price && typeof data.current_price === 'number') {
             summary.push(`💰 Current Price: ₹${data.current_price.toFixed(2)}`);
         } else {
             summary.push(`💰 Current Price: N/A`);
@@ -302,12 +302,12 @@ class ImprovedStockScraper {
         }
         
         // Market Cap
-        if (data.market_cap) {
+        if (data.market_cap && typeof data.market_cap === 'number') {
             summary.push(`🏢 Market Cap: ₹${data.market_cap.toLocaleString('en-IN')} Cr`);
         }
         
         // P/E Ratio
-        if (data.pe_ratio) {
+        if (data.pe_ratio && typeof data.pe_ratio === 'number') {
             let valuation = 'Fair';
             if (data.pe_ratio < 15) valuation = 'Cheap';
             else if (data.pe_ratio > 30 && data.pe_ratio <= 50) valuation = 'Expensive';
@@ -317,18 +317,18 @@ class ImprovedStockScraper {
         }
         
         // ROE
-        if (data.roe) {
-            summary.push(`💹 Return on Equity: ${data.roe}%`);
+        if (data.roe && typeof data.roe === 'number') {
+            summary.push(`💹 Return on Equity: ${data.roe.toFixed(2)}%`);
         }
         
         // Book Value
-        if (data.book_value) {
+        if (data.book_value && typeof data.book_value === 'number') {
             summary.push(`📖 Book Value: ₹${data.book_value.toFixed(2)}`);
         }
         
         // Risk Assessment
         let risk = 'Medium Risk';
-        if (data.pe_ratio && data.roe) {
+        if (data.pe_ratio && data.roe && typeof data.pe_ratio === 'number' && typeof data.roe === 'number') {
             if (data.pe_ratio < 20 && data.roe > 15) {
                 risk = 'Low Risk';
             } else if (data.pe_ratio > 50) {
@@ -425,7 +425,7 @@ Instructions:
         let valuation = 'Fair';
         let riskLevel = 'Moderate';
         
-        if (data.pe_ratio) {
+        if (data.pe_ratio && typeof data.pe_ratio === 'number') {
             if (data.pe_ratio < 15) valuation = 'Cheap (Low P/E)';
             else if (data.pe_ratio > 30) valuation = 'Expensive (High P/E)';
             
@@ -436,12 +436,12 @@ Instructions:
         let strengths = [];
         let concerns = [];
 
-        if (data.roe) {
+        if (data.roe && typeof data.roe === 'number') {
             if (data.roe > 15) strengths.push('Good ROE indicating profitability');
             else concerns.push('Low ROE, profitability concerns');
         }
 
-        if (data.market_cap && data.market_cap > 100000) {
+        if (data.market_cap && typeof data.market_cap === 'number' && data.market_cap > 100000) {
             strengths.push('Large-cap stock, stable');
         }
         
@@ -458,8 +458,12 @@ Instructions:
 
         const sourcesCount = Object.keys(this.data.sources).length;
 
+        const priceStr = (data.current_price && typeof data.current_price === 'number') 
+            ? `₹${data.current_price.toFixed(2)}` 
+            : 'N/A';
+
         return `Stock: ${data.company_name} (${this.stockSymbol})
-Current Price: ₹${data.current_price?.toFixed(2) || 'N/A'}  |  Change: ${data.change_percent || 'N/A'}%
+Current Price: ${priceStr}  |  Change: ${data.change_percent || 'N/A'}%
 Valuation: ${valuation}
 Risk Level: ${riskLevel}
 Strengths:
