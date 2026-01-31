@@ -1,20 +1,23 @@
 {
-  "name": "stockai-backend",
-  "version": "1.0.0",
-  "description": "Multi-source stock market data scraper API",
-  "main": "stock-api.js",
+  "name": "stockai-api",
+  "version": "2.0.0",
+  "description": "Improved Stock Market Analysis API with multiple data sources",
+  "main": "server-improved.js",
   "scripts": {
-    "start": "node stock-api.js",
-    "dev": "nodemon stock-api.js"
+    "start": "node server-improved.js",
+    "dev": "nodemon server-improved.js",
+    "test": "node test-api.js"
   },
   "keywords": [
     "stock",
-    "scraper",
-    "api",
-    "finance"
+    "market",
+    "analysis",
+    "finance",
+    "nse",
+    "india"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
@@ -24,5 +27,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

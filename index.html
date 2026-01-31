@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockAI - Premium Financial Analysis</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #FFFFFF;
+            --bg-gradient-start: #F8FAFC;
+            --bg-gradient-end: #E2E8F0;
+            --accent-green: #10B981;
+            --accent-blue: #3B82F6;
+            --accent-gold: #F59E0B;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --glass-border: rgba(148, 163, 184, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-blur: 10px;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            background-image: linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Currency Rain Animation */
+        #currency-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            top: -50px;
+            color: var(--text-secondary);
+            font-weight: bold;
+            user-select: none;
+            animation: fall linear infinite;
+            opacity: 0.15;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh);
+            }
+        }
+
+        /* Layout */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #1E293B, #64748B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            color: white;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Analysis Section */
+        .analysis-container {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto 80px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 32px;
+            color: var(--text-primary);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 16px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            padding: 18px 24px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: #FFFFFF;
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            color: white;
+            border: none;
+            padding: 0 40px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-analyze:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Chips */
+        .quick-stocks {
+            margin-top: 24px;
+        }
+        
+        .quick-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .stock-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chip {
+            background: #F1F5F9;
+            border: 1px solid #CBD5E1;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Results & Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #E2E8F0;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .result {
+             display: none;
+             animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .result.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 16px;
+        }
+
+        .result-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .summary-box {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 2px solid #E2E8F0;
+        }
+
+        .summary-line {
+            padding: 12px 0;
+            border-bottom: 1px solid #E2E8F0;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .summary-line:last-child {
+            border-bottom: none;
+        }
+        
+        /* Dynamic Content styling from JS */
+        .price-up { color: var(--accent-green); font-weight: 600; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 8px;}
+        .price-down { color: #EF4444; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 8px;}
+        .valuation-cheap { color: var(--accent-green); font-weight: 600; }
+        .valuation-fair { color: var(--accent-gold); font-weight: 600; }
+        .valuation-expensive { color: #EF4444; font-weight: 600; }
+        .risk-low { color: var(--accent-green); font-weight: 600; }
+        .risk-medium { color: var(--accent-gold); font-weight: 600; }
+        .risk-high { color: #EF4444; font-weight: 600; }
+
+        .sources-box {
+            background: #FEF3C7;
+            border: 2px solid #FDE68A;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .sources-box h4 {
+            color: #92400E;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .sources-list {
+            color: #78350F;
+        }
+
+        /* Final Summary Styles */
+        .final-summary-box {
+            background: linear-gradient(135deg, #F0F9FF, #EFF6FF);
+            border: 2px solid #BFDBFE;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .final-summary-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+        }
+
+        .final-summary-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .final-summary-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            white-space: pre-wrap;
+            font-family: 'Inter', monospace;
+            line-height: 1.8;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        /* Prompt Display Styles */
+        .prompt-section {
+            background: #FFFBEB;
+            border: 2px solid #FDE68A;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .prompt-section.active {
+            display: block;
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .prompt-header h5 {
+            color: #92400E;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .prompt-content {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #FDE68A;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #374151;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .btn-toggle-prompt {
+            background: linear-gradient(135deg, var(--accent-gold), #D97706);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-toggle-prompt:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #8B5CF6, #6366F1);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .error-box {
+            background: #FEE2E2;
+            border: 2px solid #FCA5A5;
+            color: #991B1B;
+            padding: 24px;
+            border-radius: 12px;
+        }
+
+        .error-box h3 {
+            color: #DC2626;
+        }
+
+        .actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid var(--glass-border);
+            background: white;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: #F8FAFC;
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .input-wrapper { flex-direction: column; }
+            .btn-analyze { width: 100%; border-radius: 12px; padding: 16px; }
+            .actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div id="currency-rain"></div>
+
+    <div class="page-wrapper">
+        <nav>
+            <div class="logo">StockAI</div>
+        </nav>
+
+        <section class="hero">
+            <h1>Intelligent Financial<br>Insight Engine</h1>
+            <p>Institutional-grade stock analysis powered by advanced AI algorithms. Real-time data from multiple sources specialized for the Indian Market.</p>
+            <button class="cta-button" onclick="document.getElementById('analysis-section').scrollIntoView({behavior: 'smooth'})">Start Analysis</button>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI Powered</div>
+                <div class="feature-desc">Deep learning algorithms analyze market sentiments and technical indicators instantly.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Real-Time Speed</div>
+                <div class="feature-desc">Get instant analysis reports generated in milliseconds, not hours.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Multi-Source Data</div>
+                <div class="feature-desc">Aggregated data from TradingView, Screener, and MoneyControl for accuracy.</div>
+            </div>
+        </section>
+
+        <main id="analysis-section" class="analysis-container">
+            <div class="section-title">Market Analysis Terminal</div>
+            
+            <div class="input-section">
+                 <div class="input-group">
+                    <label for="stockInput" style="display:block; margin-bottom:12px; color:var(--text-secondary); font-size:0.9rem;">ENTER STOCK SYMBOL (NSE)</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            id="stockInput" 
+                            placeholder="e.g., RELIANCE, TCS"
+                            autocomplete="off"
+                        >
+                        <button class="btn-analyze" onclick="analyzeStock()">
+                            Analyze Market
+                        </button>
+                    </div>
+                </div>
+
+                <div class="quick-stocks">
+                    <span class="quick-label">POPULAR ASSETS</span>
+                    <div class="stock-chips">
+                        <span class="chip" onclick="selectStock('RELIANCE')">RELIANCE</span>
+                        <span class="chip" onclick="selectStock('TCS')">TCS</span>
+                        <span class="chip" onclick="selectStock('INFY')">INFY</span>
+                        <span class="chip" onclick="selectStock('HDFCBANK')">HDFC BANK</span>
+                        <span class="chip" onclick="selectStock('ICICIBANK')">ICICI BANK</span>
+                        <span class="chip" onclick="selectStock('TATAMOTORS')">TATA MOTORS</span>
+                        <span class="chip" onclick="selectStock('ITC')">ITC</span>
+                        <span class="chip" onclick="selectStock('OLAELEC')">OLA ELECTRIC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Analyzing market data...</div>
+                <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+                    Accessing institutional data streams
+                </div>
+            </div>
+
+            <!-- Result State -->
+            <div class="result" id="result">
+                <div class="result-header">
+                    <h2>Analysis Report</h2>
+                    <div class="timestamp" id="timestamp"></div>
+                </div>
+
+                <div class="summary-box" id="summaryContent">
+                    <!-- Summary content populated by JS -->
+                </div>
+
+                <!-- Final Summary Section -->
+                <div class="final-summary-box" id="finalSummaryBox" style="display: none;">
+                    <div class="final-summary-title">
+                        <div>
+                            <span>📊</span> Final Summary
+                            <span class="ai-badge" id="aiBadge">AI Generated</span>
+                        </div>
+                        <button class="btn-toggle-prompt" onclick="togglePrompt()">
+                            <span id="promptButtonText">👁️ Show Prompt</span>
+                        </button>
+                    </div>
+                    
+                    <div class="final-summary-content" id="finalSummaryContent">
+                        <!-- AI-generated summary will appear here -->
+                    </div>
+
+                    <!-- Prompt Display Section -->
+                    <div class="prompt-section" id="promptSection">
+                        <div class="prompt-header">
+                            <h5>🤖 AI Prompt Used:</h5>
+                        </div>
+                        <div class="prompt-content" id="promptContent">
+                            <!-- Prompt will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sources-box">
+                    <h4>Verified Sources</h4>
+                    <div class="sources-list" id="sources">
+                        <!-- Sources content populated by JS -->
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="analyzeAnother()">
+                        New Analysis
+                    </button>
+                    <button class="btn-secondary" onclick="copyToClipboard()">
+                        Copy Report
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2025 StockAI Financial Technologies. Data provided for informational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Currency Rain Animation
+        function createCurrencyRain() {
+            const container = document.getElementById('currency-rain');
+            const symbols = ['₹', '$', '€', '¥', '₿', '%', '📈'];
+            const count = 50;
+
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('div');
+                el.classList.add('currency-symbol');
+                el.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.opacity = Math.random() * 0.15 + 0.05;
+                el.style.fontSize = Math.random() * 20 + 14 + 'px';
+                el.style.animationDuration = Math.random() * 10 + 10 + 's';
+                el.style.animationDelay = Math.random() * 20 + 's';
+                
+                container.appendChild(el);
+            }
+        }
+
+        createCurrencyRain();
+
+        // Allow Enter key to submit
+        document.getElementById('stockInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeStock();
+            }
+        });
+
+        function selectStock(symbol) {
+            document.getElementById('stockInput').value = symbol;
+            analyzeStock();
+        }
+
+        async function analyzeStock() {
+            const input = document.getElementById('stockInput');
+            const symbol = input.value.trim().toUpperCase();
+
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('result').classList.remove('active');
+
+            try {
+                const response = await fetch('http://localhost:5001/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ symbol: symbol })
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                document.getElementById('loading').classList.remove('active');
+
+                if (data.success) {
+                    displayResult(data);
+                } else {
+                    displayError(data.error || 'Failed to analyze stock');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                displayError('Could not connect to server. Make sure the API is running on port 5001.');
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const summaryContent = document.getElementById('summaryContent');
+            const sourcesDiv = document.getElementById('sources');
+            const timestampDiv = document.getElementById('timestamp');
+
+            timestampDiv.textContent = `Generated on ${data.timestamp}`;
+
+            const lines = data.summary.split('\n');
+            let html = '';
+
+            lines.forEach(line => {
+                if (!line.trim()) return;
+
+                let styledLine = line;
+
+                // Style price changes
+                if (line.includes('UP')) {
+                    styledLine = line.replace(/UP/, '<span class="price-up">UP ↗</span>');
+                } else if (line.includes('DOWN')) {
+                    styledLine = line.replace(/DOWN/, '<span class="price-down">DOWN ↘</span>');
+                }
+
+                // Style valuation
+                if (line.includes('Cheap')) {
+                    styledLine = styledLine.replace(/Cheap.*?(?=\()/, '<span class="valuation-cheap">Cheap 💰</span> ');
+                } else if (line.includes('Fair')) {
+                    styledLine = styledLine.replace(/Fair.*?(?=\()/, '<span class="valuation-fair">Fair ⚖️</span> ');
+                } else if (line.includes('Expensive')) {
+                    styledLine = styledLine.replace(/Very Expensive.*?(?=\()/, '<span class="valuation-expensive">Very Expensive 🔥</span> ');
+                    styledLine = styledLine.replace(/Expensive.*?(?=\()/, '<span class="valuation-expensive">Expensive 💸</span> ');
+                }
+
+                // Style risk
+                if (line.includes('Low Risk')) {
+                    styledLine = styledLine.replace(/Low Risk.*/, '<span class="risk-low">Low Risk ✅</span>');
+                } else if (line.includes('Medium Risk')) {
+                    styledLine = styledLine.replace(/Medium Risk.*/, '<span class="risk-medium">Medium Risk ⚡</span>');
+                } else if (line.includes('High Risk')) {
+                    styledLine = styledLine.replace(/High Risk.*/, '<span class="risk-high">High Risk ⚠️</span>');
+                }
+
+                html += `<div class="summary-line">${styledLine}</div>`;
+            });
+
+            summaryContent.innerHTML = html;
+
+            // Display Final Summary
+            if (data.final_summary) {
+                const finalSummaryBox = document.getElementById('finalSummaryBox');
+                const finalSummaryContent = document.getElementById('finalSummaryContent');
+                const promptContent = document.getElementById('promptContent');
+                const aiBadge = document.getElementById('aiBadge');
+
+                // Display the AI-generated summary
+                finalSummaryContent.textContent = data.final_summary;
+
+                // Store prompt in data attribute for toggle function
+                if (data.ai_prompt) {
+                    promptContent.textContent = data.ai_prompt;
+                }
+
+                // Update AI badge based on model used
+                if (data.ai_model === 'gpt-3.5-turbo') {
+                    aiBadge.textContent = '🤖 ChatGPT';
+                    aiBadge.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+                } else {
+                    aiBadge.textContent = '🔧 Basic Analysis';
+                    aiBadge.style.background = 'linear-gradient(135deg, #64748B, #475569)';
+                }
+
+                // Show error message if API failed
+                if (data.ai_error) {
+                    console.warn('AI Error:', data.ai_error);
+                }
+
+                // Display the box
+                finalSummaryBox.style.display = 'block';
+            }
+
+            if (data.sources && data.sources.length > 0) {
+                sourcesDiv.innerHTML = data.sources.map(s => `✓ ${s}`).join('<br>');
+            } else {
+                sourcesDiv.innerHTML = '✓ TradingView<br>✓ Screener.in';
+            }
+
+            resultDiv.classList.add('active');
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            const summaryContent = document.getElementById('summaryContent');
+
+            summaryContent.innerHTML = `
+                <div class="error-box">
+                    <h3>❌ Analysis Error</h3>
+                    <p>${message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                        <strong>Troubleshooting:</strong><br>
+                        1. Make sure the Node.js server is running (npm start)<br>
+                        2. Check if the stock symbol is correct (NSE)<br>
+                        3. Verify internet connection
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('sources').innerHTML = '❌ No data available';
+            document.getElementById('timestamp').textContent = 'Failed';
+
+            resultDiv.classList.add('active');
+        }
+
+        function togglePrompt() {
+            const promptSection = document.getElementById('promptSection');
+            const buttonText = document.getElementById('promptButtonText');
+            
+            if (promptSection.classList.contains('active')) {
+                promptSection.classList.remove('active');
+                buttonText.textContent = '👁️ Show Prompt';
+            } else {
+                promptSection.classList.add('active');
+                buttonText.textContent = '🙈 Hide Prompt';
+            }
+        }
+
+        function analyzeAnother() {
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('finalSummaryBox').style.display = 'none';
+            document.getElementById('promptSection').classList.remove('active');
+            document.getElementById('promptButtonText').textContent = '👁️ Show Prompt';
+            document.getElementById('stockInput').value = '';
+            document.getElementById('stockInput').focus();
+            document.getElementById('analysis-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const summaryContent = document.getElementById('summaryContent').innerText;
+            const sources = document.getElementById('sources').innerText;
+            const finalSummary = document.getElementById('finalSummaryBox');
+            
+            let fullText = summaryContent + '\n\n';
+            
+            // Add final summary if visible
+            if (finalSummary.style.display !== 'none') {
+                const finalSummaryText = document.getElementById('finalSummaryContent').innerText;
+                
+                fullText += '=== FINAL SUMMARY ===\n';
+                fullText += finalSummaryText + '\n\n';
+            }
+            
+            fullText += '=== SOURCES ===\n';
+            fullText += sources;
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
