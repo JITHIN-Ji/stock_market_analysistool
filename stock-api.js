@@ -8,6 +8,7 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 const PORT = 5001;
@@ -233,6 +234,152 @@ class MultiSourceStockScraper {
         return this.data.summary;
     }
     
+    async generateFinalSummary() {
+        const sources = this.data.sources;
+        const name = sources.screener?.company_info?.name || this.stockSymbol;
+        const price = sources.tradingview?.price_data?.current_price || 
+                     sources.screener?.company_info?.price || 
+                     'N/A';
+        const change = sources.tradingview?.price_data?.change_percent || 'N/A';
+        const pe = sources.screener?.ratios?.pe_ratio || 'N/A';
+        const roe = sources.screener?.ratios?.roe || 'N/A';
+        const marketCap = sources.screener?.ratios?.market_cap || 'N/A';
+        const bookValue = sources.screener?.ratios?.book_value || 'N/A';
+        
+        // Build prompt for ChatGPT
+        const prompt = `You are a professional stock analyst. Analyze the following stock data and provide a concise summary in this EXACT format:
+
+Stock: ${name} (${this.stockSymbol})
+Current Price: ${price}  |  Change: ${change}
+Valuation: [Cheap/Fair/Expensive] (explain briefly)
+Risk Level: [Low/Moderate/High]
+Strengths:
+* [strength 1]
+* [strength 2]
+Concerns:
+* [concern 1]
+* [concern 2]
+Data Reliability: [Good/Fair/Limited] ([X] Sources Verified)
+
+Stock Data:
+- Stock Symbol: ${this.stockSymbol}
+- Company Name: ${name}
+- Current Price: ${price}
+- Price Change: ${change}
+- P/E Ratio: ${pe}
+- Return on Equity (ROE): ${roe}
+- Market Cap: ${marketCap}
+- Book Value: ${bookValue}
+
+Instructions:
+1. Keep the response concise and professional
+2. Valuation should be based on P/E ratio: <15 = Cheap, 15-30 = Fair, >30 = Expensive
+3. Risk level should consider P/E, market cap, and volatility
+4. List 2-3 strengths and 2-3 concerns based on the metrics
+5. Data reliability based on how many metrics are available
+6. Use the exact format shown above`;
+
+        try {
+            const openaiApiKey = process.env.OPENAI_API_KEY;
+            
+            if (!openaiApiKey) {
+                return {
+                    summary: this.generateBasicSummary(),
+                    prompt: prompt,
+                    error: 'OpenAI API key not configured'
+                };
+            }
+
+            const axios = require('axios');
+            
+            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    { role: 'system', content: 'You are a professional stock market analyst.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 500
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${openaiApiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const aiSummary = response.data.choices[0].message.content;
+
+            return {
+                summary: aiSummary,
+                prompt: prompt,
+                model: 'gpt-3.5-turbo'
+            };
+
+        } catch (error) {
+            console.error('OpenAI API Error:', error.message);
+            return {
+                summary: this.generateBasicSummary(),
+                prompt: prompt,
+                error: error.message
+            };
+        }
+    }
+
+    generateBasicSummary() {
+        const sources = this.data.sources;
+        const name = sources.screener?.company_info?.name || this.stockSymbol;
+        const price = sources.tradingview?.price_data?.current_price || 
+                     sources.screener?.company_info?.price || 
+                     'N/A';
+        const change = sources.tradingview?.price_data?.change_percent || 'N/A';
+        const pe = sources.screener?.ratios?.pe_ratio;
+        const roe = sources.screener?.ratios?.roe;
+        const marketCap = sources.screener?.ratios?.market_cap || 'N/A';
+
+        let valuation = 'Fair';
+        let riskLevel = 'Moderate';
+        
+        if (pe) {
+            const peValue = parseFloat(pe);
+            if (peValue < 15) valuation = 'Cheap (Low P/E)';
+            else if (peValue > 30) valuation = 'Expensive (High P/E)';
+            else valuation = 'Fair (Moderate P/E)';
+            
+            if (peValue > 50) riskLevel = 'High';
+            else if (peValue < 20) riskLevel = 'Low-Moderate';
+        }
+
+        let strengths = [];
+        let concerns = [];
+
+        if (roe) {
+            const roeValue = parseFloat(roe.replace('%', ''));
+            if (roeValue > 15) strengths.push('Good ROE indicating profitability');
+            else concerns.push('Low ROE, profitability concerns');
+        }
+
+        if (marketCap.includes('00,000')) strengths.push('Large-cap stock, stable');
+        
+        if (change !== 'N/A' && !change.includes('-')) {
+            strengths.push('Positive price momentum');
+        } else if (change.includes('-')) {
+            concerns.push('Recent price decline');
+        }
+
+        if (strengths.length === 0) strengths.push('Data limited for full analysis');
+        if (concerns.length === 0) concerns.push('Limited historical data available');
+
+        return `Stock: ${name} (${this.stockSymbol})
+Current Price: ${price}  |  Change: ${change}
+Valuation: ${valuation}
+Risk Level: ${riskLevel}
+Strengths:
+${strengths.map(s => `* ${s}`).join('\n')}
+Concerns:
+${concerns.map(c => `* ${c}`).join('\n')}
+Data Reliability: Fair (2-3 Sources Verified)`;
+    }
+    
     getSourcesList() {
         const sourcesList = [];
         if (this.data.sources.tradingview && Object.keys(this.data.sources.tradingview).length > 0) {
@@ -265,12 +412,17 @@ app.post('/api/analyze', async (req, res) => {
         const scraper = new MultiSourceStockScraper(symbol);
         await scraper.scrapeAllSources();
         scraper.generateSummary();
+        const finalSummary = await scraper.generateFinalSummary();
         
         const response = {
             success: true,
             symbol: symbol.toUpperCase(),
             timestamp: scraper.data.scraped_at,
             summary: scraper.data.summary,
+            final_summary: finalSummary.summary,
+            ai_prompt: finalSummary.prompt,
+            ai_model: finalSummary.model || 'basic',
+            ai_error: finalSummary.error || null,
             sources: scraper.getSourcesList(),
             raw_data: scraper.data.sources
         };
